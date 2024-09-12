@@ -15,7 +15,7 @@ namespace BackendMultiChat.Data
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<GroupMember> GroupMembers { get; set; }
         public DbSet<FileSaveInServer> FileSaveInServers { get; set; }
-
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -48,6 +48,14 @@ namespace BackendMultiChat.Data
                 .HasOne(fs => fs.Conversation)       
                 .WithMany(c => c.Files)             
                 .HasForeignKey(fs => fs.ConversationID);
+
+            //mới thêm vào
+            modelBuilder.Entity<Conversation>()
+                .HasMany(c => c.GroupMembers)
+                .WithOne(gm => gm.Conversation)
+                .HasForeignKey(gm => gm.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

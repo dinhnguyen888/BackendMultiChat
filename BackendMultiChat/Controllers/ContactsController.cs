@@ -22,29 +22,7 @@ namespace BackendMultiChat.Controllers
         }
 
         // GET: api/Contacts
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<string>>> GetContacts()
-        {
-            var contacts = await _context.Contacts
-                .Select(c => c.FullName)
-                .ToListAsync();
-
-            return Ok(contacts);
-        }
-
-        // GET: api/Contacts/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Contact>> GetContact(int id)
-        {
-            var contact = await _context.Contacts.FindAsync(id);
-
-            if (contact == null)
-            {
-                return NotFound();
-            }
-
-            return contact;
-        }
+      
 
 
         [HttpGet("get-all-contacts/{phoneNumber}")]
