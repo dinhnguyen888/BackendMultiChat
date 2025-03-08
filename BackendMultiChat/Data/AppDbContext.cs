@@ -11,18 +11,36 @@ namespace BackendMultiChat.Data
         }
 
         public DbSet<Message> Messages { get; set; }
-        public DbSet<Contact> Contacts { get; set; }
-        public DbSet<Conversation> Conversations { get; set; }
+      
+        public DbSet<Room> Rooms { get; set; }
         public DbSet<GroupMember> GroupMembers { get; set; }
-        public DbSet<FileSaveInServer> FileSaveInServers { get; set; }
-        
+        public DbSet<FileStorage> FileStorages { get; set; }
+        public DbSet<Account> Accounts { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Account>()
+                .HasIndex(a => a.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<Account>()
+                .HasOne(a => a.RefreshToken)
+                .WithOne(rt => rt.Account)
+                .HasForeignKey<RefreshToken>(rt => rt.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Account>()
+                .HasMany(a => a.GroupMembers)
+                .WithOne(gm => gm.Account)
+                .HasForeignKey(gm => gm.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Composite key for GroupMember
             modelBuilder.Entity<GroupMember>()
-                .HasKey(gm => new { gm.ContactId, gm.ConversationId });
+                .HasKey(gm => new { gm.AccountId, gm.RoomId });
 
             // Define relationships (Message <-> Conversation)
             modelBuilder.Entity<Message>()
@@ -32,28 +50,27 @@ namespace BackendMultiChat.Data
 
             // Define relationships (GroupMember <-> Conversation <-> Contact)
             modelBuilder.Entity<GroupMember>()
-                .HasOne(gm => gm.Conversation)
+                .HasOne(gm => gm.Rooms)
                 .WithMany(c => c.GroupMembers)
-                .HasForeignKey(gm => gm.ConversationId);
+                .HasForeignKey(gm => gm.RoomId);
 
             modelBuilder.Entity<GroupMember>()
-                .HasOne(gm => gm.Contact)
+                .HasOne(gm => gm.Account)
                 .WithMany(c => c.GroupMembers)
-                .HasForeignKey(gm => gm.ContactId);
+                .HasForeignKey(gm => gm.AccountId);
 
-            modelBuilder.Entity<FileSaveInServer>()
+            modelBuilder.Entity<FileStorage>()
                .HasKey(fs => fs.FileId);
 
-            modelBuilder.Entity<FileSaveInServer>()
-                .HasOne(fs => fs.Conversation)       
+            modelBuilder.Entity<FileStorage>()
+                .HasOne(fs => fs.Rooms)       
                 .WithMany(c => c.Files)             
-                .HasForeignKey(fs => fs.ConversationID);
+                .HasForeignKey(fs => fs.RoomId);
 
-            //mới thêm vào
-            modelBuilder.Entity<Conversation>()
+            modelBuilder.Entity<Room>()
                 .HasMany(c => c.GroupMembers)
-                .WithOne(gm => gm.Conversation)
-                .HasForeignKey(gm => gm.ConversationId)
+                .WithOne(gm => gm.Rooms)
+                .HasForeignKey(gm => gm.RoomId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         }

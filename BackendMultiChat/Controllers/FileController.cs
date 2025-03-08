@@ -37,14 +37,14 @@ public class FileController : ControllerBase
 
         var fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/{file.FileName}";
 
-        var fileInServer = new FileSaveInServer
+        var fileInServer = new BackendMultiChat.Models.FileStorage
         {
             FileName = file.FileName,
-            ConversationID = Convert.ToInt32(conversationId),
+            RoomId = Convert.ToInt32(conversationId),
             FileUrl = fileUrl
         };
 
-        _context.FileSaveInServers.Add(fileInServer);
+        _context.FileStorages.Add(fileInServer);
         await _context.SaveChangesAsync();
 
         var message = new Message
@@ -68,12 +68,12 @@ public class FileController : ControllerBase
 
 
     [HttpGet("view-file/{conversationId}")]
-    public async Task<ActionResult<FileSaveInServer>> GetFileInServer(int conversationId)
+    public async Task<ActionResult<BackendMultiChat.Models.FileStorage>> GetFileInServer(int roomId)
     {
 
   
-        var fileList = await _context.FileSaveInServers
-                                     .Where(f => f.ConversationID == conversationId)
+        var fileList = await _context.FileStorages
+                                     .Where(f => f.RoomId == roomId)
                                      .ToListAsync();
 
         if (fileList == null || !fileList.Any())

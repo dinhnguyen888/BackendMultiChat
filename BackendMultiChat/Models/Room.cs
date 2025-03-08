@@ -1,13 +1,13 @@
 ﻿namespace BackendMultiChat.Models
 {
-    public class Conversation
+    public class Room
     {
-        public int ConversationId { get; set; }
-        public string? ConversationName { get; set; }
+        public int RoomId { get; set; }
+        public string? RoomName { get; set; }
 
         // Navigation properties
         public ICollection<Message> Messages { get; set; }
         public ICollection<GroupMember> GroupMembers { get; set; }
-        public ICollection<FileSaveInServer>? Files { get; set; }
+        public ICollection<FileStorage>? Files { get; set; }
     }
 }

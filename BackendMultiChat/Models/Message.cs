@@ -13,6 +13,6 @@ namespace BackendMultiChat.Models
 
         // Foreign key
         public int ConversationId { get; set; }
-        public Conversation Conversation { get; set; }
+        public Room Conversation { get; set; }
     }
 }

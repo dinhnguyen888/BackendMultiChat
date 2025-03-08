@@ -1,40 +1,97 @@
 ﻿using BackendMultiChat.Data;
 using BackendMultiChat.Hubs;
+using BackendMultiChat.Interfaces;
+using BackendMultiChat.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using System.Text;
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Cấu hình giới hạn kích thước cho form và tệp tải lên
+// Cấu hình giới hạn upload file (50MB)
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // Giới hạn 50 MB
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024;
 });
 
-// Add services to the container.
-builder.Services.AddControllers();
+// Thêm Authentication với JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var config = builder.Configuration;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = config["Jwt:Issuer"],
+            ValidAudience = config["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]))
+        };
+    });
+
+
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "BackendMultiChat", Version = "v1" });
 
-    // Cấu hình hỗ trợ upload file
-    c.OperationFilter<SwaggerFileOperationFilter>();
+    // Thêm cấu hình xác thực cho Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Nhập token vào ô bên dưới (không có 'Bearer ' phía trước)"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
 });
 
-builder.Services.AddSignalR();
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
 
-// Cấu hình DbContext với MySQL
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-    new MySqlServerVersion(new Version(8, 0, 27)))); // Thay đổi phiên bản MySQL nếu cần
+// sAdd Service
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// Kiểm tra kết nối tới MySQL
+//check connection to SQL Server
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -44,11 +101,11 @@ using (var scope = app.Services.CreateScope())
     {
         if (dbContext.Database.CanConnect())
         {
-            logger.LogInformation("MYSQL:OK.");
+            logger.LogInformation("SQL SERVER: OK.");
         }
         else
         {
-            logger.LogError("MYSQL:FAIL");
+            logger.LogError("SQL SERVER: FAIL");
         }
     }
     catch (Exception ex)
@@ -57,30 +114,22 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
-
-// Cấu hình middleware cho môi trường phát triển
+// Config http pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Phục vụ các tệp tĩnh (wwwroot)
-
-
-// Định tuyến
 app.UseRouting();
-
-// Cấu hình HTTPS redirection
 app.UseHttpsRedirection();
 
-// Cấu hình Authorization và Authentication (nếu có)
+app.UseAuthentication();
 app.UseAuthorization();
 
-// Đăng ký các route trực tiếp
-app.MapControllers();
 app.UseStaticFiles();
+app.MapControllers();
+
 app.MapHub<MessageHub>("/messagehub");
 app.MapHub<StatusHub>("/statushub");
 app.MapHub<NotificationHub>("/notificationhub");

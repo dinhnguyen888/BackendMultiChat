@@ -52,8 +52,8 @@ public class StatusHub : Hub
     {
         // Lấy danh sách các thành viên trong conversation
         var conversationMembers = _context.GroupMembers
-            .Where(gm => gm.ConversationId == conversationId)
-            .Select(gm => gm.Contact)
+            .Where(gm => gm.RoomId == conversationId)
+            .Select(gm => gm.Account)
             .ToList();
 
         foreach (var member in conversationMembers)

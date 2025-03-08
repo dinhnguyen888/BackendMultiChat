@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendMultiChat.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240906042512_ChatMigration4")]
-    partial class ChatMigration4
+    [Migration("20250307150107_AddAccountEntity")]
+    partial class AddAccountEntity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,33 +21,44 @@ namespace BackendMultiChat.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BackendMultiChat.Models.Contact", b =>
+            modelBuilder.Entity("BackendMultiChat.Models.Account", b =>
                 {
-                    b.Property<int>("ContactId")
+                    b.Property<Guid>("AccountId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ContactId"));
+                    b.Property<DateTime?>("DateBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(20)");
 
-                    b.HasKey("ContactId");
+                    b.HasKey("AccountId");
 
-                    b.ToTable("Contacts");
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("BackendMultiChat.Models.Conversation", b =>
@@ -56,10 +67,10 @@ namespace BackendMultiChat.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ConversationId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ConversationId"));
 
                     b.Property<string>("ConversationName")
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ConversationId");
 
@@ -72,14 +83,18 @@ namespace BackendMultiChat.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("FileId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FileId"));
 
                     b.Property<int>("ConversationID")
                         .HasColumnType("int");
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("FileId");
 
@@ -90,19 +105,19 @@ namespace BackendMultiChat.Migrations
 
             modelBuilder.Entity("BackendMultiChat.Models.GroupMember", b =>
                 {
-                    b.Property<int>("ContactId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ConversationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("JoinedDateTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("LeftDateTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime2");
 
-                    b.HasKey("ContactId", "ConversationId");
+                    b.HasKey("AccountId", "ConversationId");
 
                     b.HasIndex("ConversationId");
 
@@ -115,33 +130,59 @@ namespace BackendMultiChat.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("MessageId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
 
                     b.Property<int>("ConversationId")
                         .HasColumnType("int");
 
                     b.Property<string>("FileName")
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FileUrl")
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FromNumber")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MessageText")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("SentDateTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("MessageId");
 
                     b.HasIndex("ConversationId");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("BackendMultiChat.Models.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId")
+                        .IsUnique();
+
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("BackendMultiChat.Models.FileSaveInServer", b =>
@@ -157,9 +198,9 @@ namespace BackendMultiChat.Migrations
 
             modelBuilder.Entity("BackendMultiChat.Models.GroupMember", b =>
                 {
-                    b.HasOne("BackendMultiChat.Models.Contact", "Contact")
+                    b.HasOne("BackendMultiChat.Models.Account", "Account")
                         .WithMany("GroupMembers")
-                        .HasForeignKey("ContactId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -169,7 +210,7 @@ namespace BackendMultiChat.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Contact");
+                    b.Navigation("Account");
 
                     b.Navigation("Conversation");
                 });
@@ -185,9 +226,22 @@ namespace BackendMultiChat.Migrations
                     b.Navigation("Conversation");
                 });
 
-            modelBuilder.Entity("BackendMultiChat.Models.Contact", b =>
+            modelBuilder.Entity("BackendMultiChat.Models.RefreshToken", b =>
+                {
+                    b.HasOne("BackendMultiChat.Models.Account", "Account")
+                        .WithOne("RefreshToken")
+                        .HasForeignKey("BackendMultiChat.Models.RefreshToken", "AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("BackendMultiChat.Models.Account", b =>
                 {
                     b.Navigation("GroupMembers");
+
+                    b.Navigation("RefreshToken");
                 });
 
             modelBuilder.Entity("BackendMultiChat.Models.Conversation", b =>
