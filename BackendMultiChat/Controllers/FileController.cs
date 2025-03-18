@@ -1,87 +1,69 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using BackendMultiChat.Dtos;
+using BackendMultiChat.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using BackendMultiChat.Data;
-using BackendMultiChat.Models;
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using BackendMultiChat.Hubs;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
 public class FileController : ControllerBase
 {
-    private readonly AppDbContext _context;
-    private readonly IHubContext<MessageHub> _messageHubContext;
+    private readonly IFileService _fileService;
 
-    public FileController(AppDbContext context, IHubContext<MessageHub> messageHubContext)
+    public FileController(IFileService fileService)
     {
-        _context = context;
-        _messageHubContext = messageHubContext;
+        _fileService = fileService;
     }
 
-    [HttpPost("SendFile")]
-    public async Task<IActionResult> SendFile([FromForm] IFormFile file, [FromForm] string conversationId, [FromForm] string fromNumber, [FromForm] string senderName)
+    [HttpPost("send-file")]
+    public async Task<IActionResult> SendFile([FromForm] FilePostDto dto)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest("No file selected");
-
-        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", file.FileName);
-
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        try
         {
-            await file.CopyToAsync(stream);
+            var result = await _fileService.SendFile(dto);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("view-files/{roomId}")]
+    public async Task<IActionResult> ViewFiles(Guid roomId)
+    {
+        try
+        {
+            var files = await _fileService.ViewFiles(roomId);
+            if (files == null || !files.Any())
+            {
+                return NotFound("No files found");
+            }
+
+            return Ok(files);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
 
-        var fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/{file.FileName}";
-
-        var fileInServer = new BackendMultiChat.Models.FileStorage
-        {
-            FileName = file.FileName,
-            RoomId = Convert.ToInt32(conversationId),
-            FileUrl = fileUrl
-        };
-
-        _context.FileStorages.Add(fileInServer);
-        await _context.SaveChangesAsync();
-
-        var message = new Message
-        {
-            FromNumber = fromNumber,
-            SentDateTime = DateTime.Now,
-            FileName = file.FileName,
-            FileUrl = fileUrl,
-            ConversationId = Convert.ToInt32(conversationId),
-            MessageText = $"{senderName} đã gửi file: {file.FileName}"
-        };
-
-        _context.Messages.Add(message);
-        await _context.SaveChangesAsync();
-
-        await _messageHubContext.Clients.Group(conversationId.ToString())
-            .SendAsync("ReceiveMessage", fromNumber, message.MessageText, DateTime.Now);
-
-        return Ok(new { message = "Gửi file thành công! đường link:", fileUrl });
     }
 
-
-    [HttpGet("view-file/{conversationId}")]
-    public async Task<ActionResult<BackendMultiChat.Models.FileStorage>> GetFileInServer(int roomId)
+    [HttpDelete("delete-file/{fileId}")]
+    public async Task<IActionResult> DeleteFile(int fileId)
     {
-
-  
-        var fileList = await _context.FileStorages
-                                     .Where(f => f.RoomId == roomId)
-                                     .ToListAsync();
-
-        if (fileList == null || !fileList.Any())
+        try
         {
-            return NotFound();
+            var result = await _fileService.DeleteFile(fileId);
+            if (!result)
+            {
+                return NotFound("File not found");
+            }
+
+            return Ok(new { message = "File deleted successfully" });
         }
-
-        return Ok(fileList);
-
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
+
 }
