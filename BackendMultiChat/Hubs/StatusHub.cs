@@ -48,7 +48,7 @@ public class StatusHub : Hub
     }
 
     // Gửi thông báo tới tất cả user online trong một conversation trừ người gửi
-    public async Task SendNotificationToOnlineUsersInConversation(string fromNumber, string messageText, int conversationId)
+    public async Task SendNotificationToOnlineUsersInConversation(string fromNumber, string messageText, Guid conversationId)
     {
         // Lấy danh sách các thành viên trong conversation
         var conversationMembers = _context.GroupMembers
