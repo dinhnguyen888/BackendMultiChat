@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendMultiChat.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250308013414_UpdateFileEntity")]
-    partial class UpdateFileEntity
+    [Migration("20250312155538_InitDatabase")]
+    partial class InitDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -77,8 +77,8 @@ namespace BackendMultiChat.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoomId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("FileId");
 
@@ -92,8 +92,8 @@ namespace BackendMultiChat.Migrations
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("RoomId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("JoinedDateTime")
                         .HasColumnType("datetime2");
@@ -116,20 +116,20 @@ namespace BackendMultiChat.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
 
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
                     b.Property<string>("FileName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FileUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FromNumber")
+                    b.Property<string>("MessageText")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("MessageText")
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SenderName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -138,7 +138,7 @@ namespace BackendMultiChat.Migrations
 
                     b.HasKey("MessageId");
 
-                    b.HasIndex("ConversationId");
+                    b.HasIndex("RoomId");
 
                     b.ToTable("Messages");
                 });
@@ -171,13 +171,14 @@ namespace BackendMultiChat.Migrations
 
             modelBuilder.Entity("BackendMultiChat.Models.Room", b =>
                 {
-                    b.Property<int>("RoomId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomId"));
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("RoomName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RoomId");
@@ -188,7 +189,7 @@ namespace BackendMultiChat.Migrations
             modelBuilder.Entity("BackendMultiChat.Models.FileStorage", b =>
                 {
                     b.HasOne("BackendMultiChat.Models.Room", "Rooms")
-                        .WithMany("Files")
+                        .WithMany("FileStorages")
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -217,13 +218,13 @@ namespace BackendMultiChat.Migrations
 
             modelBuilder.Entity("BackendMultiChat.Models.Message", b =>
                 {
-                    b.HasOne("BackendMultiChat.Models.Room", "Conversation")
+                    b.HasOne("BackendMultiChat.Models.Room", "Rooms")
                         .WithMany("Messages")
-                        .HasForeignKey("ConversationId")
+                        .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Conversation");
+                    b.Navigation("Rooms");
                 });
 
             modelBuilder.Entity("BackendMultiChat.Models.RefreshToken", b =>
@@ -246,7 +247,7 @@ namespace BackendMultiChat.Migrations
 
             modelBuilder.Entity("BackendMultiChat.Models.Room", b =>
                 {
-                    b.Navigation("Files");
+                    b.Navigation("FileStorages");
 
                     b.Navigation("GroupMembers");
 
