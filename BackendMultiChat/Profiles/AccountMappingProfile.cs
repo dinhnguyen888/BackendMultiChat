@@ -10,6 +10,7 @@ namespace BackendMultiChat.Profiles
         {
           
             CreateMap<Account, AccountGetDto>();
+            CreateMap<Account, ProfileGetDto>();
 
             CreateMap<AccountPostDto, Account>();
 

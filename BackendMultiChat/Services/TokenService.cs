@@ -54,11 +54,23 @@ namespace BackendMultiChat.Services
         // Generate Refresh Token
         public async Task<string> GenerateRefreshToken(Guid accountId)
         {
+
+            // Check refesh token is exist in database. If exist, remove it
+            var tokenExist = await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.AccountId == accountId);
+            if (tokenExist != null)
+            {
+                _context.RefreshTokens.Remove(tokenExist);
+                await _context.SaveChangesAsync();
+            }
+
+            // Generate random number for refresh token
             var randomNumber = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(randomNumber);
             }
+
             var refreshToken = new RefreshToken
             {
                 Token = Convert.ToBase64String(randomNumber),
@@ -66,6 +78,8 @@ namespace BackendMultiChat.Services
                 AccountId = accountId,
 
             };
+
+            //save refresh token to database
             await _context.RefreshTokens.AddAsync(refreshToken);
             await _context.SaveChangesAsync();
             return refreshToken.Token;

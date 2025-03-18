@@ -12,18 +12,24 @@ namespace BackendMultiChat.Models
         public string Password { get; set; }
         public DateTime? DateBirth { get; set; }
         public string? PhoneNumber { get; set; }
+
         [Column(TypeName = "nvarchar(20)")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public Roles Role { get; set; }
+
+        // Allow null for token
         public RefreshToken? RefreshToken { get; set; }
-        public ICollection<GroupMember> GroupMembers { get; set; }
+
+        // Navigation properties
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
+        public ICollection<ProjectMember> ProjectMember { get; set; } = new List<ProjectMember>();
+        public ICollection<GroupMember> GroupMembers { get; set; } = new List<GroupMember>();
+
         public enum Roles
         {
-            Admin,      //1
-            Manager,    //2
-            Leader,     //3
-            Staff       //4
+            Admin,
+            Leader, 
+            Staff   
         }
-
     }
 }

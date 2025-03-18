@@ -8,10 +8,10 @@ namespace BackendMultiChat.Models
         public Guid AccountId { get; set; }
         public Account Account { get; set; }
 
-        public int RoomId { get; set; }
+        public Guid RoomId { get; set; }
         public Room Rooms { get; set; }
 
-        public DateTime JoinedDateTime { get; set; }
+        public DateTime JoinedDateTime { get; set; } = DateTime.Now;
         public DateTime? LeftDateTime { get; set; } // Nullable in case the user hasn't left the group
     }
 }
