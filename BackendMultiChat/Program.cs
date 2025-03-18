@@ -45,6 +45,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -85,9 +86,24 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPresenceHub, PresenceHub>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IFileService, FileService>();
+
 
 // Add SignalR
 builder.Services.AddSignalR();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -123,15 +139,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseStaticFiles();
 app.MapControllers();
 
-app.MapHub<MessageHub>("/messagehub");
-app.MapHub<StatusHub>("/statushub");
-app.MapHub<NotificationHub>("/notificationhub");
+
+app.MapHub<StatusHub>("/hub/statushub");
+app.MapHub<NotificationHub>("/hub/notificationhub");
+app.MapHub<PresenceHub>("/hub/presencehub");
 
 app.Run();
