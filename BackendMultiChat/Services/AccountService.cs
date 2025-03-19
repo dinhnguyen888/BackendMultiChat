@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using BackendMultiChat.Helpers;
 using BackendMultiChat.Models;
+using Microsoft.Extensions.Configuration.UserSecrets;
 namespace BackendMultiChat.Services
 {
     public class AccountService : IAccountService
@@ -31,19 +32,21 @@ namespace BackendMultiChat.Services
         public async Task<List<AccountViewOnlineDto>> ViewOnlineAccountAsync()
         {
             var onlineAccounts = await _presenceHub.ViewOnlineAsync();
+            var onlineAccountIds = onlineAccounts.Select(x => x.userId).ToList();
 
-            var accounts = _context.Accounts
+            var accounts = await _context.Accounts
                 .Select(a => new AccountViewOnlineDto
                 {
                     AccountId = a.AccountId,
                     FullName = a.FullName,
                     Role = a.Role.ToString(),
-                    IsOnline = onlineAccounts.Any(o => o.userId == a.AccountId.ToString()) 
+                    IsOnline = onlineAccountIds.Contains(a.AccountId.ToString()) 
                 })
-                .ToList();
+                .ToListAsync();
 
-            return accounts; 
+            return accounts;
         }
+
 
 
         public async Task<AccountGetDto?> GetAccountByIdAsync(Guid id)
