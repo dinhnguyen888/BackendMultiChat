@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using BackendMultiChat.Helpers;
 using BackendMultiChat.Models;
 using Microsoft.Extensions.Configuration.UserSecrets;
+using System.Security.Claims;
 namespace BackendMultiChat.Services
 {
     public class AccountService : IAccountService
@@ -14,13 +15,14 @@ namespace BackendMultiChat.Services
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
         private readonly IPresenceHub _presenceHub;
+        private readonly ITokenService _tokenService;
 
-        public AccountService(AppDbContext context, IMapper mapper, IPresenceHub presenceHub)
+        public AccountService(AppDbContext context, IMapper mapper, IPresenceHub presenceHub, ITokenService tokenService)
         {
             _context = context;
             _mapper = mapper;
             _presenceHub = presenceHub;
-
+            _tokenService = tokenService;
         }
 
         public async Task<IEnumerable<AccountGetDto>> GetAllAccountsAsync()
@@ -29,12 +31,20 @@ namespace BackendMultiChat.Services
             return _mapper.Map<IEnumerable<AccountGetDto>>(accounts);
         }
 
-        public async Task<List<AccountViewOnlineDto>> ViewOnlineAccountAsync()
+        public async Task<List<AccountViewOnlineDto>> ViewOnlineAccountAsync(string token)
         {
+            var principal = _tokenService.GetPrincipalFromToken(token);
+            var userId = principal.FindFirst("id")?.Value;
+            if (userId == null) throw new UnauthorizedAccessException("Invalid token");
             var onlineAccounts = await _presenceHub.ViewOnlineAsync();
-            var onlineAccountIds = onlineAccounts.Select(x => x.userId).ToList();
+           
+            var onlineAccountIds = onlineAccounts
+                .Select(x => x.userId)
+                .ToList();
 
+            Console.WriteLine(onlineAccountIds);
             var accounts = await _context.Accounts
+                .Where(a => a.AccountId != Guid.Parse(userId))
                 .Select(a => new AccountViewOnlineDto
                 {
                     AccountId = a.AccountId,

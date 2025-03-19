@@ -1,5 +1,6 @@
 ﻿using BackendMultiChat.Dtos;
 using BackendMultiChat.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendMultiChat.Controllers
@@ -117,12 +118,18 @@ namespace BackendMultiChat.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("online")]
         public async Task<IActionResult> ViewOnlineAccounts()
         {
             try
             {
-                var onlineAccounts = await _accountService.ViewOnlineAccountAsync();
+                var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                if (string.IsNullOrEmpty(token))
+                    return Unauthorized("Token is missing");
+                
+
+                var onlineAccounts = await _accountService.ViewOnlineAccountAsync(token);
                 if (onlineAccounts == null || !onlineAccounts.Any())
                 {
                     return NotFound(new { message = "No online accounts found" });
