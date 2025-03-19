@@ -144,6 +144,11 @@ namespace BackendMultiChat.Data
             modelBuilder.Entity<TodoList>()
                 .HasKey(tl => tl.TodoListId);
 
+            modelBuilder.Entity<TodoList>()
+                .HasOne(tl => tl.Account)
+                .WithMany(a => a.TodoLists)
+                .HasForeignKey(tl => tl.UserId);
+
             // One-to-Many: A TodoList belongs to a Project
             // VIET THEM TINH NANG XOA PROJECT THI XOA TODO LIST TRONG SERVICE
             modelBuilder.Entity<TodoList>()

@@ -90,6 +90,9 @@ builder.Services.AddScoped<IPresenceHub, PresenceHub>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<ITodoService, TodoService>();
 
 
 // Add SignalR
