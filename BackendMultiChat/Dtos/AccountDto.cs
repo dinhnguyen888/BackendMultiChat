@@ -37,7 +37,7 @@ namespace BackendMultiChat.Dtos
         public Guid AccountId { get; set; }
         public string FullName { get; set; }       
         public string Role { get; set; }
-        public bool IsOnline { get; set; }
+      
 
     }
 }

@@ -36,26 +36,35 @@ namespace BackendMultiChat.Services
             var principal = _tokenService.GetPrincipalFromToken(token);
             var userId = principal.FindFirst("id")?.Value;
             if (userId == null) throw new UnauthorizedAccessException("Invalid token");
+
+            // Get online userId from PresenceHub
             var onlineAccounts = await _presenceHub.ViewOnlineAsync();
-           
             var onlineAccountIds = onlineAccounts
                 .Select(x => x.userId)
                 .ToList();
 
+            if (!onlineAccountIds.Any())
+                return new List<AccountViewOnlineDto>(); // Do not query if no online account
+
             Console.WriteLine(onlineAccountIds);
+
+            
             var accounts = await _context.Accounts
-                .Where(a => a.AccountId != Guid.Parse(userId))
+                .Where(a =>
+                    a.AccountId != Guid.Parse(userId) &&
+                    onlineAccountIds.Contains(a.AccountId.ToString())) // Filter online accounts
                 .Select(a => new AccountViewOnlineDto
                 {
                     AccountId = a.AccountId,
                     FullName = a.FullName,
                     Role = a.Role.ToString(),
-                    IsOnline = onlineAccountIds.Contains(a.AccountId.ToString()) 
+                  
                 })
                 .ToListAsync();
 
             return accounts;
         }
+
 
 
 
