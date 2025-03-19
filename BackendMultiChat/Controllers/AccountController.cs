@@ -15,51 +15,125 @@ namespace BackendMultiChat.Controllers
             _accountService = accountService;
         }
 
-        // Get all accounts
         [HttpGet]
         public async Task<IActionResult> GetAllAccounts()
         {
-            var accounts = await _accountService.GetAllAccountsAsync();
-            return Ok(accounts);
+            try
+            {
+                var accounts = await _accountService.GetAllAccountsAsync();
+                return Ok(accounts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Failed to get accounts: {ex.Message}" });
+            }
         }
 
-        // Get account by id
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAccountById(Guid id)
         {
-            var account = await _accountService.GetAccountByIdAsync(id);
-            return account == null ? NotFound() : Ok(account);
+            try
+            {
+                var account = await _accountService.GetAccountByIdAsync(id);
+                return account == null
+                    ? NotFound(new { message = $"Account with ID {id} not found" })
+                    : Ok(account);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Failed to get account: {ex.Message}" });
+            }
         }
 
-        // Create new account
         [HttpPost]
         public async Task<IActionResult> CreateAccount([FromBody] AccountPostDto dto)
         {
-            var createdAccount = await _accountService.CreateAccountAsync(dto);
-            return CreatedAtAction(nameof(GetAccountById), new { id = createdAccount.AccountId }, createdAccount);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var createdAccount = await _accountService.CreateAccountAsync(dto);
+                return CreatedAtAction(nameof(GetAccountById), new { id = createdAccount.AccountId }, createdAccount);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Failed to create account: {ex.Message}" });
+            }
         }
 
-        // Update account
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAccount(Guid id, [FromBody] AccountUpdateDto dto)
         {
-            var success = await _accountService.UpdateAccountAsync(id, dto);
-            return success ? NoContent() : NotFound();
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var success = await _accountService.UpdateAccountAsync(id, dto);
+                return success
+                    ? NoContent()
+                    : NotFound(new { message = $"Account with ID {id} not found" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Failed to update account: {ex.Message}" });
+            }
         }
 
-        // Delete account
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAccount(Guid id)
         {
-            var success = await _accountService.DeleteAccountAsync(id);
-            return success ? NoContent() : NotFound();
+            try
+            {
+                var success = await _accountService.DeleteAccountAsync(id);
+                return success
+                    ? NoContent()
+                    : NotFound(new { message = $"Account with ID {id} not found" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Failed to delete account: {ex.Message}" });
+            }
         }
 
         [HttpPost("change-admin-permission/{id}")]
         public async Task<IActionResult> ChangeAdminPermission(Guid id)
         {
-            var success = await _accountService.ChangeAdminPermissionAsync(id);
-            return success ? NoContent() : NotFound();
+            try
+            {
+                var success = await _accountService.ChangeAdminPermissionAsync(id);
+                return success
+                    ? NoContent()
+                    : NotFound(new { message = $"Account with ID {id} not found" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Failed to change admin permission: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("online")]
+        public async Task<IActionResult> ViewOnlineAccounts()
+        {
+            try
+            {
+                var onlineAccounts = await _accountService.ViewOnlineAccountAsync();
+                if (onlineAccounts == null || !onlineAccounts.Any())
+                {
+                    return NotFound(new { message = "No online accounts found" });
+                }
+
+                return Ok(onlineAccounts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Failed to get online accounts: {ex.Message}" });
+            }
         }
     }
 }

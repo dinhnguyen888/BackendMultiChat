@@ -12,11 +12,14 @@ namespace BackendMultiChat.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IPresenceHub _presenceHub;
 
-        public AccountService(AppDbContext context, IMapper mapper)
+        public AccountService(AppDbContext context, IMapper mapper, IPresenceHub presenceHub)
         {
             _context = context;
             _mapper = mapper;
+            _presenceHub = presenceHub;
+
         }
 
         public async Task<IEnumerable<AccountGetDto>> GetAllAccountsAsync()
@@ -24,6 +27,24 @@ namespace BackendMultiChat.Services
             var accounts = await _context.Accounts.ToListAsync();
             return _mapper.Map<IEnumerable<AccountGetDto>>(accounts);
         }
+
+        public async Task<List<AccountViewOnlineDto>> ViewOnlineAccountAsync()
+        {
+            var onlineAccounts = await _presenceHub.ViewOnlineAsync();
+
+            var accounts = _context.Accounts
+                .Select(a => new AccountViewOnlineDto
+                {
+                    AccountId = a.AccountId,
+                    FullName = a.FullName,
+                    Role = a.Role.ToString(),
+                    IsOnline = onlineAccounts.Any(o => o.userId == a.AccountId.ToString()) 
+                })
+                .ToList();
+
+            return accounts; 
+        }
+
 
         public async Task<AccountGetDto?> GetAccountByIdAsync(Guid id)
         {
