@@ -1,6 +1,4 @@
-﻿using BackendMultiChat.Models;
-
-namespace BackendMultiChat.Dtos
+﻿namespace BackendMultiChat.Dtos
 {
     public class MessageGetDto
     {
@@ -12,5 +10,14 @@ namespace BackendMultiChat.Dtos
         public string? FileUrl { get; set; }
 
 
+    }
+
+    public class MessagePostDto
+    {
+        public string SenderName { get; set; }
+        public string MessageText { get; set; } 
+        public Guid RoomId { get; set; }
+        public string? FileName { get; set; }
+        public string? FileUrl { get; set; }
     }
 }
