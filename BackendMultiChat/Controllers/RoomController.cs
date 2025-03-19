@@ -31,7 +31,7 @@ namespace BackendMultiChat.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateNewRoom(RoomCreateDto dto)
+        public async Task<IActionResult> CreateNewRoom([FromBody]RoomCreateDto dto)
         {
             try
             {

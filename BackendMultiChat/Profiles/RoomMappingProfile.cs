@@ -8,7 +8,7 @@ namespace BackendMultiChat.Profiles
     {
         public RoomMappingProfile()
         {
-            CreateMap<Room, RoomDto>();
+          
 
             CreateMap<RoomCreateDto, Room>()
                 .ForMember(dest => dest.GroupMembers, opt => opt.MapFrom(src => src.GroupMembers));
