@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendMultiChat.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250319040311_Add-Link")]
-    partial class AddLink
+    [Migration("20250320092117_InitData")]
+    partial class InitData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -61,6 +61,42 @@ namespace BackendMultiChat.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("BackendMultiChat.Models.DirectMessage", b =>
+                {
+                    b.Property<int>("DirectMessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DirectMessageId"));
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MessageText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ReceiverId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SentDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("DirectMessageId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("DirectMessages");
+                });
+
             modelBuilder.Entity("BackendMultiChat.Models.FileStorage", b =>
                 {
                     b.Property<int>("FileId")
@@ -106,41 +142,6 @@ namespace BackendMultiChat.Migrations
                     b.HasIndex("RoomId");
 
                     b.ToTable("GroupMembers");
-                });
-
-            modelBuilder.Entity("BackendMultiChat.Models.Message", b =>
-                {
-                    b.Property<int>("MessageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
-
-                    b.Property<string>("FileName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MessageText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("RoomId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SenderName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("SentDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("MessageId");
-
-                    b.HasIndex("RoomId");
-
-                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("BackendMultiChat.Models.Project", b =>
@@ -230,6 +231,41 @@ namespace BackendMultiChat.Migrations
                     b.ToTable("Rooms");
                 });
 
+            modelBuilder.Entity("BackendMultiChat.Models.RoomMessage", b =>
+                {
+                    b.Property<int>("RoomMessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomMessageId"));
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MessageText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SentDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("RoomMessageId");
+
+                    b.HasIndex("RoomId");
+
+                    b.ToTable("RoomMessages");
+                });
+
             modelBuilder.Entity("BackendMultiChat.Models.TodoItem", b =>
                 {
                     b.Property<int>("Id")
@@ -308,6 +344,25 @@ namespace BackendMultiChat.Migrations
                     b.ToTable("TodoLists");
                 });
 
+            modelBuilder.Entity("BackendMultiChat.Models.DirectMessage", b =>
+                {
+                    b.HasOne("BackendMultiChat.Models.Account", "Receiver")
+                        .WithMany("ReceivedMessages")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("BackendMultiChat.Models.Account", "Sender")
+                        .WithMany("SentMessages")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("BackendMultiChat.Models.FileStorage", b =>
                 {
                     b.HasOne("BackendMultiChat.Models.Room", "Rooms")
@@ -334,17 +389,6 @@ namespace BackendMultiChat.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
-
-                    b.Navigation("Rooms");
-                });
-
-            modelBuilder.Entity("BackendMultiChat.Models.Message", b =>
-                {
-                    b.HasOne("BackendMultiChat.Models.Room", "Rooms")
-                        .WithMany("Messages")
-                        .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("Rooms");
                 });
@@ -390,6 +434,17 @@ namespace BackendMultiChat.Migrations
                     b.Navigation("Account");
                 });
 
+            modelBuilder.Entity("BackendMultiChat.Models.RoomMessage", b =>
+                {
+                    b.HasOne("BackendMultiChat.Models.Room", "Rooms")
+                        .WithMany("Messages")
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Rooms");
+                });
+
             modelBuilder.Entity("BackendMultiChat.Models.TodoItem", b =>
                 {
                     b.HasOne("BackendMultiChat.Models.TodoList", "TodoList")
@@ -428,7 +483,11 @@ namespace BackendMultiChat.Migrations
 
                     b.Navigation("Projects");
 
+                    b.Navigation("ReceivedMessages");
+
                     b.Navigation("RefreshToken");
+
+                    b.Navigation("SentMessages");
 
                     b.Navigation("TodoLists");
                 });
