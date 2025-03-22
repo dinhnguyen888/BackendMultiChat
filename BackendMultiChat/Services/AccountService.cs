@@ -43,22 +43,21 @@ namespace BackendMultiChat.Services
                 .Select(x => x.userId)
                 .ToList();
 
-            if (!onlineAccountIds.Any())
-                return new List<AccountViewOnlineDto>(); // Do not query if no online account
+          
 
             Console.WriteLine(onlineAccountIds);
 
             
             var accounts = await _context.Accounts
                 .Where(a =>
-                    a.AccountId != Guid.Parse(userId) &&
-                    onlineAccountIds.Contains(a.AccountId.ToString())) // Filter online accounts
+                    a.AccountId != Guid.Parse(userId)
+                   ) // Filter online accounts
                 .Select(a => new AccountViewOnlineDto
                 {
                     AccountId = a.AccountId,
                     FullName = a.FullName,
                     Role = a.Role.ToString(),
-                  
+                    IsOnline = onlineAccountIds.Contains(a.AccountId.ToString()) ? true : false
                 })
                 .ToListAsync();
 

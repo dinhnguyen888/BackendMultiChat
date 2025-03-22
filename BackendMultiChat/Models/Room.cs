@@ -7,7 +7,7 @@
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation properties
-        public ICollection<Message> Messages { get; set; } = new List<Message>();
+        public ICollection<RoomMessage> Messages { get; set; } = new List<RoomMessage>();
         public ICollection<GroupMember> GroupMembers { get; set; } = new List<GroupMember>();
         public ICollection<FileStorage>? FileStorages { get; set; } = new List<FileStorage>();
     }

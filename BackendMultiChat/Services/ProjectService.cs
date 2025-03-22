@@ -4,6 +4,8 @@ using BackendMultiChat.Dtos;
 using BackendMultiChat.Interfaces;
 using BackendMultiChat.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
+using System.Security.Claims;
 
 namespace BackendMultiChat.Services
 {
@@ -11,11 +13,13 @@ namespace BackendMultiChat.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
 
-        public ProjectService(AppDbContext context, IMapper mapper)
+        public ProjectService(AppDbContext context, IMapper mapper, ITokenService tokenService)
         {
             _context = context;
             _mapper = mapper;
+            _tokenService = tokenService;
         }
 
         public async Task<IEnumerable<ProjectGetDto>> GetAllProjectAsync()
@@ -35,11 +39,13 @@ namespace BackendMultiChat.Services
 
             // Add members to project
             project.ProjectMembers = dto.MemberIds
-                .Select(memberId => new ProjectMember
+                .Select(
+                memberId => new ProjectMember
                 {
                     ProjectId = project.ProjectId,
-                    AccountId = memberId
-                }).ToList();
+                    AccountId = memberId,
+                }
+                ).ToList();
 
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
@@ -123,6 +129,23 @@ namespace BackendMultiChat.Services
                 .ToList();
 
             return memberProgress;
+        }
+
+
+        public async Task<List<ProjectGetSimpleDto>> GetListNameProject(string token)
+        {
+            var claimPrincipal = _tokenService.GetPrincipalFromToken(token);
+            var userId = claimPrincipal.FindFirstValue("id");
+
+            var projects = await _context.Projects
+                .Where(p => p.ProjectMembers.Any(pm => pm.AccountId.ToString() == userId))
+                .Select(p => new ProjectGetSimpleDto
+                {
+                    ProjectId = p.ProjectId,
+                    ProjectName = p.ProjectName
+                })
+                .ToListAsync();
+            return projects;
         }
     }
 }

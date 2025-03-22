@@ -32,7 +32,7 @@ namespace BackendMultiChat.Controllers
         
         // Create a new message
         [HttpPost]
-        public async Task<IActionResult> CreateMessage([FromBody] MessagePostDto dto)
+        public async Task<IActionResult> CreateMessage([FromBody] RMPostDto dto)
         {
             if (!ModelState.IsValid)
             {

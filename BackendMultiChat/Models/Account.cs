@@ -25,6 +25,8 @@ namespace BackendMultiChat.Models
         public ICollection<ProjectMember> ProjectMember { get; set; } = new List<ProjectMember>();
         public ICollection<GroupMember> GroupMembers { get; set; } = new List<GroupMember>();
         public ICollection<TodoList> TodoLists { get; set; } = new List<TodoList>();
+        public ICollection<DirectMessage> SentMessages { get; set; } = new List<DirectMessage>();
+        public ICollection<DirectMessage> ReceivedMessages { get; set; } = new List<DirectMessage>();
 
         public enum Roles
         {

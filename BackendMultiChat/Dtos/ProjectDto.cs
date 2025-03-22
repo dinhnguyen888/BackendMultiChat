@@ -31,4 +31,12 @@
         public string AccountName { get; set; }
         public double ProgressPercentage { get; set; }
     }
+
+    public class  ProjectGetSimpleDto
+    {
+        public int ProjectId { get; set; }
+        public string ProjectName { get; set; }
+
+    }
+
 }

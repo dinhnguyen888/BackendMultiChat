@@ -93,6 +93,9 @@ builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITodoService, TodoService>();
+builder.Services.AddScoped<IDirectMessageService, DirectMessageService>();
+builder.Services.AddScoped<IFileHandler, FileHandler>();
+
 
 
 // Add SignalR

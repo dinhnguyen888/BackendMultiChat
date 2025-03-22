@@ -10,14 +10,14 @@ namespace BackendMultiChat.Data
         {
         }
 
-        public DbSet<Message> Messages { get; set; }
+        public DbSet<RoomMessage> RoomMessages { get; set; }
       
         public DbSet<Room> Rooms { get; set; }
         public DbSet<GroupMember> GroupMembers { get; set; }
         public DbSet<FileStorage> FileStorages { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-
+        public DbSet<DirectMessage> DirectMessages { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectMember> ProjectMembers { get; set; }
         public DbSet<TodoItem> TodoItems { get; set; }
@@ -96,6 +96,19 @@ namespace BackendMultiChat.Data
             modelBuilder.Entity<Room>()
                 .Property(r => r.RoomId)
                 .ValueGeneratedNever();
+
+            // Define DirectMessage
+            modelBuilder.Entity<DirectMessage>()
+                .HasOne(dm => dm.Sender)
+                .WithMany(a => a.SentMessages)
+                .HasForeignKey(dm => dm.SenderId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<DirectMessage>()
+                .HasOne(dm => dm.Receiver)
+                .WithMany(a => a.ReceivedMessages)
+                .HasForeignKey(dm => dm.ReceiverId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Primary Key for Project
             modelBuilder.Entity<Project>()

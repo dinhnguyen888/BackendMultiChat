@@ -8,13 +8,12 @@ namespace BackendMultiChat.Profiles
     {
         public MessageMappingProfile()
         {
-            CreateMap<Message, MessageGetDto>();
+            CreateMap<RoomMessage, RMGetDto>();
 
 
-            CreateMap<MessagePostDto, Message>()
+            CreateMap<RMPostDto, RoomMessage>()
                 .ForMember(dest => dest.SentDateTime, opt => opt.MapFrom(src => DateTime.UtcNow)) 
-                .ForMember(dest => dest.FileName, opt => opt.Ignore()) 
-                .ForMember(dest => dest.FileUrl, opt => opt.Ignore());
+               ;
         }
     }
 }
